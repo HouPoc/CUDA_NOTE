@@ -15,8 +15,9 @@ void platform_info();
   return device pointer
   store device grid limitation and block limitation
 */
-void platform_info(int *dev_count, bool dev_info = true){
+void platform_info(int *dev_count, bool dev_info =true){
   cudaError_t err;
+  //int a = 0;
   err = cudaGetDeviceCount(dev_count);
   if (err !=cudaSuccess){
     printf("platform_info error :  %s \n", cudaGetErrorString(err));
@@ -29,7 +30,7 @@ void platform_info(int *dev_count, bool dev_info = true){
         cudaGetDeviceProperties(&dev_prop, i);
         printf("Device Number: %d\n", i);
         printf("\t Device Name: %s. \n", dev_prop.name);
-        printf("\t Memory Clock Rate (MHz): %d\n", (dev_prop.memoryClockRate/1.0E3));
+        printf("\t Memory Clock Rate (GHz): %f\n", (dev_prop.memoryClockRate/1.0e6));
         printf("\t Memory Bus Width (bits): %d\n", dev_prop.memoryBusWidth);
         printf("\t Peak Memory Bandwidth (GB/s): %f\n\n",2.0*dev_prop.memoryClockRate*(dev_prop.memoryBusWidth/8)/1.0e6);
         dev_limit *new_dev = new dev_limit(dev_prop.maxGridSize, dev_prop.maxThreadsDim);
