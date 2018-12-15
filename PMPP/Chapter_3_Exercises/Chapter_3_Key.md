@@ -22,7 +22,7 @@
 
 7. With reference to the previous question, how may idle threads do you expect to have?
     * __Answer:__:
-        # of idle thread = # of total threads - # of pixels
+        number of idle thread = number of total threads - number of pixels
             = 13 * 32 * 29 * 32 - 400 * 900 
             = 26048 
 
@@ -48,5 +48,4 @@
 
 11. A student mentioned that he was able to multiply two 1024 x 1024 matrices by using a tiled matrix multiplication code with 32 x 32 thread blocks. He is using a CUDA device that allows up to 512 threads per block and up to 8 blocks per SM. He further mentuoned that each thread in a thread block calculates one element of the result matrix. What would be your reaction and why?  
     * __Answer:__  
-        First, his block configuration is illegal becuase his configuration 32 x 32 thread blocks exceed 512 threads per block limitation. Second, single thread in tiled matrix multiplication kernel cannot calculate one element of the result matrix. Instead, it will calculate the partial result for a couple elements in matrix. To generate final result for a element in the result matrix, it requires severl threads to work together. More detials will be discussed in chapter 4.
-              
+        His statement is clearly not valid respecting to his device contrains. Starting with simple caculations, to multiplay two 1024 x 1024 matrices using 32 x 32 thread blocks requires each block to calcuate 1024 elements (1024 / 32 x 1024 /32). Also, he mentioned that each tread only calculate one element of the result matrix. Thus, he needs 1024 threads in each thread block, but his device only support 512 threads per block. As a result, his statement is not valid.  
