@@ -4,7 +4,10 @@
 #include<time.h>
 #include<stdlib.h>
 #include"cn_data_structure.h"
-
+#define TILE_WIDTH 32
+__device__ int D_ROW_LEFT = 1024;
+__device__ int D_COL_RIGHT = 1024;
+__device__ int D_K = 1024;
 
 using namespace std;
 
@@ -57,7 +60,7 @@ void initial2DMatrix (T* matrix, int row, int col ,int random = 0){
     srand (time(NULL));
     for (int i = 0; i < row; i++){
         for (int j= 0; j < col; j++){ 
-            matrix[i * row + j] = (T) (random? 100.0 *((float) rand()) / (float) RAND_MAX : 0);
+            matrix[i * row + j] = (T) (random? 10.0 *((float) rand()) / (float) RAND_MAX : 0);
         }
     }
 }
@@ -105,6 +108,7 @@ void matrixAddCol(float *firstInput, float *secondInput, float *outPut, int n, i
 
 /*
    problem 3.2
+   Matrix Vector Mult 
    In this kernel, each thread will calculate one element in the result vector   
 */
 __global__
@@ -121,4 +125,61 @@ void matrixVectorMult(float *matrix, float *vector, float *output, int COL, int 
         output[Idx] = tmp;
    }
 }
+/*
+    Chapter 4 Practice
+    Matrix Matrix Mult
+    In this kernel, each thread will calculate one element of the final matrix
+    K = first matrix's col num = second matrix's row num
+    D_ROW_LEFT = first matrix's row num
+    D_COL_RIGHT = second matrix's col num 
+    newMatrix = D_ROW_LEFT x D_COL_RIGHT
+*/
+__global__
+void MatrixMatrixMult(float *matrixLeft, float *matrixRight, float *output){
+    int col = blockDim.x * blockIdx.x + threadIdx.x;
+    int row = blockDim.y * blockIdx.y + threadIdx.y; 
+    if ( row < D_ROW_LEFT && col < D_COL_RIGHT){
+        float value = 0.0;
+        for (int i = 0 ; i < D_K; i++){
+            value += matrixLeft[row * D_K + i] * matrixRight[i * D_K + col];
+        }
+        output[row * D_K + col] = value;
+    }  
+}
 
+/*
+    Chapter 4 Practice
+    Matrix Matrix Mult
+    In this Kernel, we use tiled matrix mult algoritm and static shared memory. Each thread will 
+    calculate one element of the final matrix
+    K = first matrix's col num = second matrix's row num
+    D_ROW_LEFT = first matrix's row num
+    D_COL_RIGHT = second matrix's col num
+    TILE_WIDTH = the TILE matrix's size
+    newMatrix = D_ROW_LEFT x D_COL_RIGHT
+*/
+__global__
+void MatrixMatrixMultTiled(float *matrixLeft, float *matrixRight, float *output){
+    __shared__  float sMatrixLeft[TILE_WIDTH][TILE_WIDTH];
+    __shared__  float sMatrixRight[TILE_WIDTH][TILE_WIDTH];  
+   int bx = blockIdx.x; int by = blockIdx.y;
+   int tx = threadIdx.x; int ty = threadIdx.y;
+   int col = bx * TILE_WIDTH + tx;
+   int row = by * TILE_WIDTH + ty;
+   float value = 0;
+   for (int i = 0; i < ceil(D_K/(float)TILE_WIDTH); ++i){
+       if (row * D_K + i * TILE_WIDTH  +tx < D_K){
+        sMatrixLeft[ty][tx]  = matrixLeft[row * D_K + i * TILE_WIDTH  +tx];
+       }
+       if ((ty + i * TILE_WIDTH) * D_COL_RIGHT  + col < D_K){
+        sMatrixRight[ty][tx] = matrixRight[(ty + i * TILE_WIDTH) * D_COL_RIGHT  + col];
+       }
+       __syncthreads();
+       for (int j = 0; j < TILE_WIDTH; j++){
+           value += sMatrixLeft[ty][j] * sMatrixRight[j][tx]; 
+       }
+       if (row < D_ROW_LEFT && col < D_COL_RIGHT ){
+        output[row * D_COL_RIGHT + col] = value;
+       }
+   }
+}

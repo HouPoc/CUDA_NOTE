@@ -60,7 +60,37 @@ bool checkMatrixVectorMult(T* matrix, T* vector, T* result, int row, int col){
     return true;
 }
 
-
+/*
+    colLeft = rowRight
+*/
+template <class T>
+bool checkMatrixMatrixMult(T* matrixLeft, T* matrixRight, T* result, 
+                            int rowLeft, int colLeft,
+                            int rowRight, int colRight){
+    if (colLeft != rowRight){
+        printf("Invalid Inputs. \n");
+        return false;
+    }
+    for (int i = 0; i < rowLeft; i++){
+        for (int j = 0; j < colRight; j++){
+            //calculate one element of the result matrix
+            float value = 0.0;
+            for (int k =0; k < colRight; k++){
+                value += matrixLeft[i * rowLeft + k] * matrixRight[k * rowRight + j];
+            }
+            if (result[i * rowLeft + j] - value > 0.01){
+                printf("matrix matrix mult not correct at  [%d, %d]:\n", i, j);
+                std :: cout << "\tgiven result :" << result[i * rowLeft + j];
+                std :: cout << "\t \t calculate result: " << value;
+                std :: cout << "\t difference : " << result[i * rowLeft + j] - value;
+                std :: cout << endl;
+                return false;   
+            }
+        }
+    }
+    printf("matrix matrix mult correct. \n");
+    return true;
+}
 
 
 
