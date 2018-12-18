@@ -26,6 +26,7 @@
         There is no data sharing on registers because registers are private to each thread.  Furthermore, the size of shared memory is much larger than registers, using shared memory can store more data.
 
 5. For our tiled matrix-matrix multiplication kernel, if we use a 32 x 32 tile, what is the reduction of memory bandwidth usage of input matrices M and N?
+    
     __Answer:__
     
       1/32 of the original usages.
@@ -70,23 +71,37 @@
 
     __Answer:__
     
-      Case 1: 
-        Peak FLOPS = 200 GFLOPS, Peak Memory Bandwidth = 100 GB/s
-        200 GFLOPS = 200 * 10^9 floating-point operations/s
-        Computation Cap: 200 * 10^9 / (36) = 5.55 * 10^9 threads/s
-        100 GB/s = 100 * 10^9 bytes/s
-        Memory Cap = 100 * 10^9 / (7 * 32 / 4) = 3.57 * 10^9 threads/s
-        5.55 * 10^9 > 3.57 * 10^9
-        For this device, kernel will be memory-bound.
+      * Case 1: 
+      
+           Peak FLOPS = 200 GFLOPS, Peak Memory Bandwidth = 100 GB/s
+           
+           200 GFLOPS = 200 * 10^9 floating-point operations/s
+           
+           Computation Cap: 200 * 10^9 / (36) = 5.55 * 10^9 threads/s
+           
+           100 GB/s = 100 * 10^9 bytes/s
+           
+           Memory Cap = 100 * 10^9 / (7 * 32 / 4) = 3.57 * 10^9 threads/s
+           
+           5.55 * 10^9 > 3.57 * 10^9
+           
+           For this device, kernel will be memory-bound.
 
-      Case 2: 
-        Peak FLOPS = 300 GFLOPS, Peak Memoyr Bandwidth = 250 GB/s
-        300 GFLOPS = 300 * 10^9 floating-point operations/s
-        Computation Cap: 300 * 10^9 / (36) = 8.33 * 10^9 threads/s
-        250 GB/s = 250 * 10^9 bytes/s
-        Memory Cap = 250 * 10^9 / (7 * 32 / 4) = 8.92 * 10^9 threads/s    
-        8.33 * 10^9 < 8.92 * 10^9
-        For this device, kernel will be compute-bound.
+      * Case 2: 
+      
+           Peak FLOPS = 300 GFLOPS, Peak Memoyr Bandwidth = 250 GB/s
+           
+           300 GFLOPS = 300 * 10^9 floating-point operations/s
+           
+           Computation Cap: 300 * 10^9 / (36) = 8.33 * 10^9 threads/s
+           
+           250 GB/s = 250 * 10^9 bytes/s
+           
+           Memory Cap = 250 * 10^9 / (7 * 32 / 4) = 8.92 * 10^9 threads/s    
+           
+           8.33 * 10^9 < 8.92 * 10^9
+           
+           For this device, kernel will be compute-bound.
 
 
 10. To manipulate tiles, a new CUDA programmer has written the following device kernel, which will transpose each tile in a matrix. The tiles are of size BLOCK_WIDTH by BLOCK_WIDTH and each of the dimensions of matrix is known to be a multiple of BLOCK_WIDTH. The kernel invocation and code are shown below BLOCK_WIDTH is known at compile time, but could be set anywhere from 1 to 20. 
@@ -108,11 +123,13 @@
     * Out of the possible range of values for BLOCK_SIZE. for what values of BLOCK_SIZE will this kernel function execute correctly on the device?
 
         __Answer:__
+        
          Before answering this problem, the first thing to do is to understand the given kernel. First, this kernel _only_ _find_ _transpose_ _for_ _the_ _tile_ _matrix_ rather than the whole matrix. Second, this kernel uses shared memory to store the original value and then each thread find the target element in shared memory. Then main problem here is that no barrier before accessing shared memory. 
 
          To make this kernel work well without barriers, we need to turn it into a synchronous kernel. All threads in a thread block should execute the same instruction at an instant. To do this, we need to limit the thread block's size under 32, which put all threads in a block into one warp. Then, they can be synchronous. Thus, BLOCK_SIZE < int(sqrt(32)) -> BLOCK_SIZE < 5.    
     * If the code does not execute correctly for all BLOCK_SIZE values, suggest a fix to the code to make it work for all BLOC_SIZE values.
         
         __Answer:__
-            The only thing we need to do is to add two barriers in this kernel. The first barrier is placed before changing the original matrix so that all threads finish loading data to shared memory. The second barrier is placed after changing the origninal matrix so that the faster threads will not pollute current shared memory with data from next tile.
+        
+         The only thing we need to do is to add two barriers in this kernel. The first barrier is placed before changing the original matrix so that all threads finish loading data to shared memory. The second barrier is placed after changing the origninal matrix so that the faster threads will not pollute current shared memory with data from next tile.
 
