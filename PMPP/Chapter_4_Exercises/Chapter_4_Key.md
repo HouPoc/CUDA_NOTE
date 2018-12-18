@@ -127,12 +127,12 @@
 
         * __Answer:__
         
-         Before answering this problem, the first thing to do is to understand the given kernel. First, this kernel _only_ _find_ _transpose_ _for_ _the_ _tile_ _matrix_ rather than the whole matrix. Second, this kernel uses shared memory to store the original value and then each thread find the target element in shared memory. Then main problem here is that no barrier before accessing shared memory. 
+            Before answering this problem, the first thing to do is to understand the given kernel. First, this kernel _only_ _find_ _transpose_ _for_ _the_ _tile_ _matrix_ rather than the whole matrix. Second, this kernel uses shared memory to store the original value and then each thread find the target element in shared memory. Then main problem here is that no barrier before accessing shared memory. 
 
-         To make this kernel work well without barriers, we need to turn it into a synchronous kernel. All threads in a thread block should execute the same instruction at an instant. To do this, we need to limit the thread block's size under 32, which put all threads in a block into one warp. Then, they can be synchronous. Thus, BLOCK_SIZE < int(sqrt(32)) -> BLOCK_SIZE < 5.    
+            To make this kernel work well without barriers, we need to turn it into a synchronous kernel. All threads in a thread block should execute the same instruction at an instant. To do this, we need to limit the thread block's size under 32, which put all threads in a block into one warp. Then, they can be synchronous. Thus, BLOCK_SIZE < int(sqrt(32)) -> BLOCK_SIZE < 5.    
     * If the code does not execute correctly for all BLOCK_SIZE values, suggest a fix to the code to make it work for all BLOC_SIZE values.
         
         * __Answer:__
         
-         The only thing we need to do is to add two barriers in this kernel. The first barrier is placed before changing the original matrix so that all threads finish loading data to shared memory. The second barrier is placed after changing the origninal matrix so that the faster threads will not pollute current shared memory with data from next tile.
+            The only thing we need to do is to add two barriers in this kernel. The first barrier is placed before changing the original matrix so that all threads finish loading data to shared memory. The second barrier is placed after changing the origninal matrix so that the faster threads will not pollute current shared memory with data from next tile.
 
