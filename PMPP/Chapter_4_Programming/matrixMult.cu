@@ -1,9 +1,7 @@
 #include<iostream>
 #include"../cuda_note.h"
 #include"../cuda_debug.h"
-#define ROW_LEFT 512 
-#define COL_RIGHT 256
-#define K 1000
+
 
 int main(){
     int sizeMatrixLeft = sizeof(float) * ROW_LEFT * K;

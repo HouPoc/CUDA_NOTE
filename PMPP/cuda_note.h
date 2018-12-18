@@ -4,10 +4,14 @@
 #include<time.h>
 #include<stdlib.h>
 #include"cn_data_structure.h"
+#define ROW_LEFT 500 
+#define COL_RIGHT 250
+#define K 1000
 #define TILE_WIDTH 32
-__device__ int D_ROW_LEFT = 1024;
-__device__ int D_COL_RIGHT = 1024;
-__device__ int D_K = 1024;
+__device__ int D_ROW_LEFT = ROW_LEFT;
+__device__ int D_COL_RIGHT = COL_RIGHT;
+__device__ int D_K = K;
+
 
 using namespace std;
 
@@ -168,10 +172,10 @@ void MatrixMatrixMultTiled(float *matrixLeft, float *matrixRight, float *output)
    int row = by * TILE_WIDTH + ty;
    float value = 0;
    for (int i = 0; i < ceil(D_K/(float)TILE_WIDTH); ++i){
-       if (row * D_K + i * TILE_WIDTH  +tx < D_K){
+       if (row < D_ROW_LEFT && row * D_K + i * TILE_WIDTH  +tx < D_K){
         sMatrixLeft[ty][tx]  = matrixLeft[row * D_K + i * TILE_WIDTH  +tx];
        }
-       if ((ty + i * TILE_WIDTH) * D_COL_RIGHT  + col < D_K){
+       if (col < D_COL_RIGHT && (ty + i * TILE_WIDTH) * D_COL_RIGHT  + col < D_K ){
         sMatrixRight[ty][tx] = matrixRight[(ty + i * TILE_WIDTH) * D_COL_RIGHT  + col];
        }
        __syncthreads();

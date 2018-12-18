@@ -78,7 +78,7 @@ bool checkMatrixMatrixMult(T* matrixLeft, T* matrixRight, T* result,
             for (int k =0; k < colRight; k++){
                 value += matrixLeft[i * rowLeft + k] * matrixRight[k * rowRight + j];
             }
-            if (result[i * rowLeft + j] - value > 0.01){
+            if (result[i * rowLeft + j] - value > 0.001){
                 printf("matrix matrix mult not correct at  [%d, %d]:\n", i, j);
                 std :: cout << "\tgiven result :" << result[i * rowLeft + j];
                 std :: cout << "\t \t calculate result: " << value;
