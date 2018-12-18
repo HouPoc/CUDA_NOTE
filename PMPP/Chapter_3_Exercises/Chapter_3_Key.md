@@ -42,7 +42,7 @@
 
 8. Consider a hypothetical blocks with 8 threads executing a section of code before reaching a barier. The threads require the following amount of time (in micrisecinds) to execute the sections: 2.0, 2.3, 3.0, 2.8, 2.4, 1.9, 2.6, and 2.9 and to spend the rest of their tiem waiting for the barrier. What percentage of the total execution time of the thread is spent waiting for the barrier?
     
-    * __Answer:__:
+    * __Answer:__
         
         As long as all threads reach to the barrier, they can go to next stage. In other words, the total execution time is determined by the slowest thread that needs 3.0 ms. Since all threads execute parallelly, the final execution time of each thread is 3.0 ms. Then, we can calculate the waiting time of each block: 1.0 ms, 0.7 ms, 0.0 ms, 0.2 ms, 0.6 ms, 1.1 ms, 0.4 ms, and 0.1 ms. The corresponding waiting perentages: 33.3%, 23.3%, 0.6%, 6.6%, 20%, 36.6%, 13.3%, 3.3%. 
 
@@ -59,6 +59,7 @@
         * Compute Capability 1.0: 8 blocks, 768 threads
         * Compute Capability 1.2: 8 blokcs, 1024 threads
         * Compute Capability 3.0: 16 blocks, 2048 threads 
+        
         Then, we can tell which one is correct.  
 
 10. A CUDA programmer says that if they launch a kernel with only 32 threads in each block, they can leave out the \_\_syncthreads() instruction where ever barrier synchronization is needed. Do you think this is a good idea? Explain.
