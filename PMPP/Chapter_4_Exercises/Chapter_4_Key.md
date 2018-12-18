@@ -22,7 +22,7 @@
 
 4. Assuming the capacity is not an issue for registers or shared memory, give one important reason why it would be valuable to use shared memory instead of registers to hold values fetched from global memory? Explain your answer. 
    
-   __Answer:__:
+   __Answer:__
         There is no data sharing on registers because registers are private to each thread.  Furthermore, the size of shared memory is much larger than registers, using shared memory can store more data.
 
 5. For our tiled matrix-matrix multiplication kernel, if we use a 32 x 32 tile, what is the reduction of memory bandwidth usage of input matrices M and N?
