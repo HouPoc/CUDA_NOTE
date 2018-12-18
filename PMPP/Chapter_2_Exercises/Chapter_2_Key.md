@@ -6,12 +6,17 @@
 
     * __Explanation:__ 
      
-     In this problem, we want to map each element in the vector to exact one thread. The globalID of a thread should be the gloabl index of the vector: 
-globalID = # of threads in previous blocks + # of thread before it in the current block. 
-Recall that, we organize threads in to the block and organize blocks into grid:
-number of threads in previous block = blockIdx.x * blockDim.x
-number of threads before the target = threadIdx.x
-Finally, we reach to the final answer. (section 2.5)
+      In this problem, we want to map each element in the vector to exact one thread. The globalID of a thread should be the gloabl index of the vector: 
+ 
+      * globalID = # of threads in previous blocks + # of thread before it in the current block. 
+
+      * Recall that, we organize threads in to the block and organize blocks into grid:
+
+         * number of threads in previous block = blockIdx.x * blockDim.x
+
+         * number of threads before the target = threadIdx.x
+
+      * Finally, we reach to the final answer. (section 2.5)
 
  
 2. Assume that we want to use each thread to calculate two (adjacent) elements of a vector addition. What would be the expression for mapping the thread/block indices to i, the data index of the first element to tbe processed by a thread?
@@ -27,6 +32,7 @@ Finally, we reach to the final answer. (section 2.5)
 3. We want to use each thread to calculate two elements of a vector addition. Each thread block process 2 * blockDim.x consecutive elements that form two sections. All threads in each block will first process a section first, each processing one element. They will then all move to the next section, each processing one element. Assume the variable i should be the index for the first element to be processed by a thread. What would be the index for mapping the thread/block indices to data index of the first element?
 
    * __Answer:__ 
+     
      i = blockIdx.x * blockDim.x *2 + threadIdx.x
 
    * __Explanation:__
@@ -76,9 +82,11 @@ Finally, we reach to the final answer. (section 2.5)
 8. How would one declare a varaible err that can appropriately reveive returned vale of a CUDA API call?
    
    * __Answer:__
+     
      cudaError_t err
 
    * __Explanation:__ 
+     
      cudaError_t is the return type of CUDA runtime API. (section 2.4)
 
 9. A new summer intern was frustrated with CUDA. He has been complaining taht CUDA is very tedious: he hard to declare many functions that he plans to execute on both the host and the device twice,once as a host function and once as a device function. What is your response?
