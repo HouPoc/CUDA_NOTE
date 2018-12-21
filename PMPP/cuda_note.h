@@ -4,6 +4,7 @@
 #include<time.h>
 #include<stdlib.h>
 #include"cn_data_structure.h"
+#define COMMON_WIDTH 512
 #define ROW_LEFT 500 
 #define COL_RIGHT 250
 #define K 1000
@@ -186,4 +187,54 @@ void MatrixMatrixMultTiled(float *matrixLeft, float *matrixRight, float *output)
         output[row * D_COL_RIGHT + col] = value;
        }
    }
+}
+
+
+/*
+    Chapter 5 Practice
+    Sum Reduction 
+    In this kernel, we use reduction algorithm to calculate the sum of an array
+*/
+__global__
+void sumReduction(float *input, float *output, int len){
+    __shared__ float partialSum[COMMON_WIDTH];
+    int t = threadIdx.x;
+    int globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    if (global < len){
+        partialSum[t] = input[globalId];
+    }else{
+        partialSum[t] = 0.0;
+    }
+    for (int stride = 1; stride < blockDim.x; stride*=2){
+        __syncthreads();
+        if (t % (2 * stride) == 0){
+            partialSum[t] += partialSum[t+stride];
+        }
+    }
+    __syncthreads();
+    if (t==0){
+        output[blockidx.x] = partalSum[0];
+    }
+}
+
+__global__
+void sumReductionNoBranch(float *input, float* output, int len){
+    __shared__ float partialSum[COMMON_WIDTH];
+    int t = threadIdx.x;
+    int globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    if (global < len){
+        partialSum[t] = input[globalId];
+    }else{
+        partialSum[t] = 0.0;
+    } 
+    for (int stride = blockDim.x / 2 ; stride >= 1; stride = stride >> 1){
+        __syncthreads();
+        if (t % (2 * stride) == 0){
+            partialSum[t] += partialSum[t+stride];
+        }
+    }
+    __syncthreads();
+    if (t==0){
+        output[blockidx.x] = partalSum[0];
+    }   
 }
