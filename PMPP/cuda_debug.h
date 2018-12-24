@@ -96,7 +96,7 @@ bool checkMatrixMatrixMult(T* matrixLeft, T* matrixRight, T* result,
     Check sumReduction
 */
 template <class T>
-bool checkSumReduction(float *input, float *intputCUDA, int len, int lenCUDA)
+bool checkSumReduction(float *input, float *inputCUDA, int len, int lenCUDA)
 {
     float sum = 0.0;
     float sumCUDA = 0.0;
@@ -106,11 +106,12 @@ bool checkSumReduction(float *input, float *intputCUDA, int len, int lenCUDA)
     for (int i = 0; i < lenCUDA; i ++){
         sumCUDA += inputCUDA[i];
     }
-    if (sum == sumCUDA){
+    if (abs(sum - sumCUDA) < 1.0){
         printf("Sum Reduction Correct. \n");
         return true;
     }
      printf("Sum Reduction Incorrect. \n");
+     printf("CUDA sum: %f \t CPU sum: %f \n", sumCUDA, sum);
     return false;
 }
 

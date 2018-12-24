@@ -200,41 +200,93 @@ void sumReduction(float *input, float *output, int len){
     __shared__ float partialSum[COMMON_WIDTH];
     int t = threadIdx.x;
     int globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    if (global < len){
+    if (globalId< len){
         partialSum[t] = input[globalId];
     }else{
         partialSum[t] = 0.0;
     }
     for (int stride = 1; stride < blockDim.x; stride*=2){
         __syncthreads();
-        if (t % (2 * stride) == 0){
-            partialSum[t] += partialSum[t+stride];
+        int index = 2 * stride * threadIdx.x;
+        if (index < blockDim.x){
+            partialSum[index] += partialSum[index + stride];
         }
     }
     __syncthreads();
     if (t==0){
-        output[blockidx.x] = partalSum[0];
+        output[blockIdx.x] = partialSum[0];
     }
 }
+
+/*
+    Chapter 5 Practice
+    Sum Reduction 
+    In this kernel, we use reduction algorithm to calculate the sum of an array but reduce brach
+    divergency in warp
+*/
 
 __global__
 void sumReductionNoBranch(float *input, float* output, int len){
     __shared__ float partialSum[COMMON_WIDTH];
     int t = threadIdx.x;
     int globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    if (global < len){
+    if (globalId < len){
         partialSum[t] = input[globalId];
     }else{
         partialSum[t] = 0.0;
     } 
     for (int stride = blockDim.x / 2 ; stride >= 1; stride = stride >> 1){
         __syncthreads();
-        if (t % (2 * stride) == 0){
+        if (t < stride){
             partialSum[t] += partialSum[t+stride];
         }
     }
     __syncthreads();
     if (t==0){
-        output[blockidx.x] = partalSum[0];
+        output[blockIdx.x] = partialSum[0];
     }   
 }
+
+/*
+    Chapter 5 Exercise 1 Solution 1
+    In this problem, we are required to modify above two kernels to reduce idle threads 
+    In the kernel without caring branch divergency, only half of the threads work from
+    the first iteration. To elimate that waste, we can ask all threads to work in the 
+    beginning.  
+*/
+
+/*  
+    We load two elements at the beginning rather than one thread x will load element x 
+    and element  (x + len / 2). In this case, we will reduce the size of block by half,
+    and all threads will perform at leasat one reduction.
+            
+*/
+__global__
+void sumReductionModifyOne(float *input, float *output, int len){
+    __shared__ float partialSum[COMMON_WIDTH];
+    int tId = threadIdx.x;
+    int elementId = blockIdx.x * blockDimx.x + threadIdx.x;
+    // load one element
+    partialSum[tId] = input[elementId];
+    // load another element
+    if (tID < (len / 2)){
+        partialSum[tId] += input[elementId + len / 2];
+    }
+    __syncthreads();
+    for (int stride = 1; stride < blockDim.x; stride*=2){
+        __syncthreads();
+        int index = 2 * stride * threadIdx.x;
+        if (index < blockDim.x){
+            partialSum[index] += partialSum[index + stride];
+        }
+    }
+    __syncthreads();
+    if (t==0){
+        output[blockIdx.x] = partialSum[0];
+    } 
+}
+/*
+    Chapter 5 Exercise Solution 1 Extend
+    After elimating the thread waste, we can also reduce the usage of thread by ask each
+    thread to perform two reductions.
+*/

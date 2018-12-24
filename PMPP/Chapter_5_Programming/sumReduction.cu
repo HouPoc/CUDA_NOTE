@@ -1,15 +1,17 @@
 #include<iostream>
 #include"../cuda_note.h"
 #include"../cuda_debug.h"
-#define LEN 20000
+#define LEN 200000
 
 
 
 int main(){
     int inputSize = sizeof(float) * LEN;
     int numBlocks = ceil((float)LEN/(float)COMMON_WIDTH);
-    dim3 grid = (numBlocks, 1, 1);
-    dim3 block = (COMMON_WIDTH, 1, 1);
+    float ms;
+    dim3 grid(numBlocks, 1, 1);
+    dim3 gridModifyOne(ceil(numBlocks/2), 1, 1);
+    dim3 block(COMMON_WIDTH, 1, 1);
 
     float *h_input = (float*)malloc(inputSize);
     float *h_output = (float *)malloc(sizeof(float) * numBlocks);
@@ -30,7 +32,9 @@ int main(){
     cudaMalloc(&d_output, sizeof(float)* numBlocks);
 
     cudaEventRecord(start);
-    sumReduction<<<grid, block>>>(float* input, float *output, int len, int stride);
+    //sumReduction<<<grid, block>>>(d_input, d_output, LEN);
+    //sumReductionNoBranch<<<grid, block>>>(d_input, d_output, LEN);
+    sumReductionModifyOne<<<gridModifyOne, block>>>(d_input, d_output, LEN);
     cudaEventRecord(stop);
 
     cudaMemcpy(h_input, d_input, inputSize, cudaMemcpyDeviceToHost);
@@ -40,7 +44,7 @@ int main(){
     
     cudaEventElapsedTime(&ms, start, stop);
     printf("Kernel execution time is %f ms \n",  ms);
-    
+    checkSumReduction<float>(h_input, h_output, LEN, numBlocks);
     cudaFree(d_input);
     free(h_input);
 
