@@ -1,20 +1,43 @@
 #include<iostream>
 #include"../cuda_note.h"
 #include"../cuda_debug.h"
-#define LEN 200000
+#define LEN 400000
 
-
+void sumReduction(){
+    
+}
 
 int main(){
+    enum RD {   
+                reductionWithBranch = 1,
+                reductionWithNoBranch = 2,
+                reductionWithBranchNoIdleThread = 3,
+                reductionWithNoBranchNoIdleThread = 4
+            };
+    RD reductionStrategy = reductionWithNoBranchNoIdleThread; 
+
+   
+    int numBlocks;
     int inputSize = sizeof(float) * LEN;
-    int numBlocks = ceil((float)LEN/(float)COMMON_WIDTH);
-    float ms;
-    dim3 grid(numBlocks, 1, 1);
-    dim3 gridModifyOne(ceil(numBlocks/2), 1, 1);
+    if (reductionStrategy == reductionWithBranch 
+     || reductionStrategy == reductionWithNoBranch)
+    {
+        numBlocks = ceil((float)LEN/(float)COMMON_WIDTH);
+          
+    }
+    if (reductionStrategy == reductionWithBranchNoIdleThread 
+     || reductionStrategy == reductionWithNoBranchNoIdleThread)
+    {
+        numBlocks = ceil((float)LEN/(float)(2 * COMMON_WIDTH));   
+    }
     dim3 block(COMMON_WIDTH, 1, 1);
+    dim3 grid(numBlocks, 1, 1); 
+    
+    float ms;
 
     float *h_input = (float*)malloc(inputSize);
     float *h_output = (float *)malloc(sizeof(float) * numBlocks);
+
     float *d_input;
     float *d_output;
     
@@ -31,10 +54,22 @@ int main(){
 
     cudaMalloc(&d_output, sizeof(float)* numBlocks);
 
+
     cudaEventRecord(start);
-    //sumReduction<<<grid, block>>>(d_input, d_output, LEN);
-    //sumReductionNoBranch<<<grid, block>>>(d_input, d_output, LEN);
-    sumReductionModifyOne<<<gridModifyOne, block>>>(d_input, d_output, LEN);
+    switch (reductionStrategy){
+        case reductionWithBranch: 
+            printf("reductionWithBranch \n");
+            sumReduction<<<grid, block>>>(d_input, d_output, LEN); break;
+        case reductionWithNoBranch:
+            printf("reductionWithNoBranch \n");
+            sumReductionNoBranch<<<grid, block>>>(d_input, d_output, LEN); break;
+        case reductionWithBranchNoIdleThread:
+            printf("reductionWithBranchNoIdleThread \n");
+            sumReductionModify<<<grid, block>>>(d_input, d_output, LEN); break;
+        case reductionWithNoBranchNoIdleThread: 
+            printf("reductionWithNoBranchNoIdleThread \n");
+            sumReductionNoBranchModify<<<grid, block>>>(d_input, d_output, LEN); break;
+    }
     cudaEventRecord(stop);
 
     cudaMemcpy(h_input, d_input, inputSize, cudaMemcpyDeviceToHost);

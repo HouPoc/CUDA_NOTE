@@ -65,7 +65,7 @@ void initial2DMatrix (T* matrix, int row, int col ,int random = 0){
     srand (time(NULL));
     for (int i = 0; i < row; i++){
         for (int j= 0; j < col; j++){ 
-            matrix[i * row + j] = (T) (random? 10.0 *((float) rand()) / (float) RAND_MAX : 0);
+            matrix[i * row + j] = (T) (random? 20.0 *((float) rand()) / (float) RAND_MAX : 0);
         }
     }
 }
@@ -256,21 +256,21 @@ void sumReductionNoBranch(float *input, float* output, int len){
 */
 
 /*  
-    We load two elements at the beginning rather than one thread x will load element x 
-    and element  (x + len / 2). In this case, we will reduce the size of block by half,
-    and all threads will perform at leasat one reduction.
+        First, we modify the kernel without considersing branch divergence within warp.
+        We load two elements at the beginning. We load elements from two adjacent blocks
+        to take advantage of memory coalescing.
             
 */
 __global__
-void sumReductionModifyOne(float *input, float *output, int len){
+void sumReductionModify(float *input, float *output, int len){
     __shared__ float partialSum[COMMON_WIDTH];
     int tId = threadIdx.x;
-    int elementId = blockIdx.x * blockDimx.x + threadIdx.x;
-    // load one element
-    partialSum[tId] = input[elementId];
-    // load another element
-    if (tID < (len / 2)){
-        partialSum[tId] += input[elementId + len / 2];
+    int globalId = blockIdx.x * (blockDim.x * 2) + threadIdx.x;
+    if (globalId < len){
+        partialSum[tId] = input[globalId];
+    }
+    if (globalId + blockDim.x < len) {
+        partialSum[tId] += input[globalId + blockDim.x];
     }
     __syncthreads();
     for (int stride = 1; stride < blockDim.x; stride*=2){
@@ -281,12 +281,32 @@ void sumReductionModifyOne(float *input, float *output, int len){
         }
     }
     __syncthreads();
-    if (t==0){
+    if (tId==0){
         output[blockIdx.x] = partialSum[0];
     } 
 }
 /*
-    Chapter 5 Exercise Solution 1 Extend
-    After elimating the thread waste, we can also reduce the usage of thread by ask each
-    thread to perform two reductions.
+        Second, we modify the kernel without branch divergence. 
 */
+__global__
+void sumReductionNoBranchModify(float *input, float* output, int len){
+    __shared__ float partialSum[COMMON_WIDTH];
+    int tId = threadIdx.x;
+    int globalId = blockIdx.x * (blockDim.x * 2)+ threadIdx.x;
+    if (globalId < len){
+        partialSum[tId] = input[globalId];
+    }
+    if (globalId + blockDim.x < len) {
+        partialSum[tId] += input[globalId + blockDim.x];
+    }
+    for (int stride = blockDim.x / 2 ; stride >= 1; stride = stride >> 1){
+        __syncthreads();
+        if (tId < stride){
+            partialSum[tId] += partialSum[tId+stride];
+        }
+    }
+    __syncthreads();
+    if (tId==0){
+        output[blockIdx.x] = partialSum[0];
+    }   
+}
