@@ -183,10 +183,11 @@ void MatrixMatrixMultTiled(float *matrixLeft, float *matrixRight, float *output)
        for (int j = 0; j < TILE_WIDTH; j++){
            value += sMatrixLeft[ty][j] * sMatrixRight[j][tx]; 
        }
-       if (row < D_ROW_LEFT && col < D_COL_RIGHT ){
+       __syncthreads();
+   }
+   if (row < D_ROW_LEFT && col < D_COL_RIGHT ){
         output[row * D_COL_RIGHT + col] = value;
        }
-   }
 }
 
 
