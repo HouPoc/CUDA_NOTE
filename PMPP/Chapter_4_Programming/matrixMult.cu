@@ -10,8 +10,8 @@ int main(){
     float *h_matrixLeft     =   (float *) malloc(sizeMatrixLeft);
     float *h_matrixRight    =   (float *) malloc(sizeMatrixRight);
     float *h_matrixOutput         =   (float *) malloc(sizeMatrixOutput);
-    initial2DMatrix<float>(h_matrixLeft, ROW_LEFT, COL_RIGHT, 1);
-    initial2DMatrix<float>(h_matrixRight, ROW_LEFT, COL_RIGHT, 1);
+    initial2DMatrix<float>(h_matrixLeft, ROW_LEFT, K, 1);
+    initial2DMatrix<float>(h_matrixRight, K, COL_RIGHT, 1);
     float *d_matrixLeft, *d_matrixRight, *d_matrixOutput;
     cudaError_t err;
     cudaEvent_t start, stop;
@@ -41,8 +41,8 @@ int main(){
     /* 
         Invoke Simple MatrixMult Kernel
     */
-    dim3 grid(ceil(ROW_LEFT/32), ceil(COL_RIGHT/32), 1);
-    dim3 block(32, 32 ,1);
+    dim3 block(TILE_WIDTH, TILE_WIDTH);
+    dim3 grid(ceil((float)COL_RIGHT/(float)TILE_WIDTH), ceil((float)ROW_LEFT/(float)TILE_WIDTH));
     cudaEventRecord(start);
     MatrixMatrixMultTiled<<<grid, block>>>(d_matrixLeft, d_matrixRight, d_matrixOutput);
     //MatrixMatrixMult<<<grid, block>>>(d_matrixLeft, d_matrixRight, d_matrixOutput);

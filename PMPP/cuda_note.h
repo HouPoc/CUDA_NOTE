@@ -5,9 +5,9 @@
 #include<stdlib.h>
 #include"cn_data_structure.h"
 #define COMMON_WIDTH 512
-#define ROW_LEFT 500 
-#define COL_RIGHT 250
-#define K 1000
+#define ROW_LEFT 200
+#define COL_RIGHT 100
+#define K 100
 #define TILE_WIDTH 32
 __device__ int D_ROW_LEFT = ROW_LEFT;
 __device__ int D_COL_RIGHT = COL_RIGHT;
@@ -64,8 +64,8 @@ template <class T>
 void initial2DMatrix (T* matrix, int row, int col ,int random = 0){
     srand (time(NULL));
     for (int i = 0; i < row; i++){
-        for (int j= 0; j < col; j++){ 
-            matrix[i * row + j] = (T) (random? 20.0 *((float) rand()) / (float) RAND_MAX : 0);
+        for (int j = 0; j < col; j++){ 
+            matrix[i * col + j] = (T) (random? 20.0 *((float) rand()) / (float) RAND_MAX : 1);
         }
     }
 }
@@ -169,25 +169,30 @@ void MatrixMatrixMultTiled(float *matrixLeft, float *matrixRight, float *output)
     __shared__  float sMatrixRight[TILE_WIDTH][TILE_WIDTH];  
    int bx = blockIdx.x; int by = blockIdx.y;
    int tx = threadIdx.x; int ty = threadIdx.y;
-   int col = bx * TILE_WIDTH + tx;
-   int row = by * TILE_WIDTH + ty;
-   float value = 0;
+   int col = bx * blockDim.x + tx;
+   int row = by * blockDim.y + ty;
+   float value = 0.0;
    for (int i = 0; i < ceil(D_K/(float)TILE_WIDTH); ++i){
-       if (row < D_ROW_LEFT && row * D_K + i * TILE_WIDTH  +tx < D_K){
-        sMatrixLeft[ty][tx]  = matrixLeft[row * D_K + i * TILE_WIDTH  +tx];
+       sMatrixLeft[ty][tx] = 0.0;
+       sMatrixRight[ty][tx] = 0.0; 
+       __syncthreads();
+       if (row < D_ROW_LEFT && i * TILE_WIDTH + tx < D_K){
+        sMatrixLeft[ty][tx]  = matrixLeft[row * D_K + i * TILE_WIDTH + tx];
        }
-       if (col < D_COL_RIGHT && (ty + i * TILE_WIDTH) * D_COL_RIGHT  + col < D_K ){
+       if ((ty + i * TILE_WIDTH) < D_K && col < D_COL_RIGHT){
         sMatrixRight[ty][tx] = matrixRight[(ty + i * TILE_WIDTH) * D_COL_RIGHT  + col];
        }
        __syncthreads();
+
        for (int j = 0; j < TILE_WIDTH; j++){
            value += sMatrixLeft[ty][j] * sMatrixRight[j][tx]; 
        }
-       __syncthreads();
+       __syncthreads();  
    }
+   //output[0] = 0; 
    if (row < D_ROW_LEFT && col < D_COL_RIGHT ){
         output[row * D_COL_RIGHT + col] = value;
-       }
+    }
 }
 
 

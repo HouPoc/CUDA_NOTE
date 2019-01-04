@@ -8,13 +8,13 @@ template <class T>
 void peakMatrix (T* matrix, int maxRow, int maxCol, bool singleValue = false, int row = 0, int col = 0)
 {
     if (singleValue){
-        std :: cout << "matrix["<< row <<"][" << col <<"] :"<< matrix[row * maxRow + col] << std :: endl;
+        std :: cout << "matrix["<< row <<"][" << col <<"] :"<< matrix[row * maxCol + col] << std :: endl;
         
     }
     else {
         for (int i = 0; i < maxRow; i++){
-            for (int j= 0; j < maxRow; j++){
-            std :: cout << "\t" << matrix[i * maxRow + j];   
+            for (int j= 0; j < maxCol; j++){
+            std :: cout << "\t" << matrix[i * maxCol + j];   
         }
         std :: cout << "\n";
         }
@@ -46,7 +46,7 @@ bool checkMatrixVectorMult(T* matrix, T* vector, T* result, int row, int col){
     for (int i =0 ; i < row; i++){
         float tmp = 0.0;
         for (int j = 0; j < col; j++){
-            tmp += matrix[i * row + j] * vector[i];
+            tmp += matrix[i * col + j] * vector[i];
         }
         if (result[i] != tmp){
             printf("matrix vector mult not correct at index %d:\n", i);
@@ -75,14 +75,14 @@ bool checkMatrixMatrixMult(T* matrixLeft, T* matrixRight, T* result,
         for (int j = 0; j < colRight; j++){
             //calculate one element of the result matrix
             float value = 0.0;
-            for (int k =0; k < colRight; k++){
-                value += matrixLeft[i * rowLeft + k] * matrixRight[k * rowRight + j];
+            for (int k = 0; k < colLeft; k++){
+                value += matrixLeft[i * colLeft + k] * matrixRight[k * colRight + j];
             }
-            if (result[i * rowLeft + j] - value > 0.001){
+            if (abs(result[i * colRight + j] - value ) > 0.1){
                 printf("matrix matrix mult not correct at  [%d, %d]:\n", i, j);
-                std :: cout << "\tgiven result :" << result[i * rowLeft + j];
+                std :: cout << "\tgiven result :" << result[i * colRight + j];
                 std :: cout << "\t \t calculate result: " << value;
-                std :: cout << "\t difference : " << result[i * rowLeft + j] - value;
+                std :: cout << "\t difference : " << result[i * colRight + j] - value;
                 std :: cout << endl;
                 return false;   
             }

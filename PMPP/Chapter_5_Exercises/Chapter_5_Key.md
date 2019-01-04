@@ -69,7 +69,7 @@
 
     * __Answer:__
 
-        The BLOCK_SIZE's x dimention should be multiple by 32. CUDA assigns threads into warp based on its thread ID. Supposed BLOCK_SIZE is (35, N, 1), In the second warp, we will have 3 threads from the 1st row and 29 threads from the 2nd row. Obviously, they will generate un-coalesced accesses to global memory. 
+        The BLOCK_SIZE's X dimention should be multiple by 32. CUDA assigns threads into warp based on its thread ID. Supposed BLOCK_SIZE is (35, N, 1), In the second warp, we will have 3 threads from the 1st row and 29 threads from the 2nd row. Obviously, they will generate un-coalesced accesses to global memory. 
 
 
 12. In an attempt to improve performance, a bright young engineer changed the reduction kernel into the following. (A) Do you believe that the performance
