@@ -5,9 +5,9 @@
 #include<stdlib.h>
 #include"cn_data_structure.h"
 #define COMMON_WIDTH 512
-#define ROW_LEFT 200
-#define COL_RIGHT 100
-#define K 100
+#define ROW_LEFT 5000
+#define COL_RIGHT 2000
+#define K 1000
 #define TILE_WIDTH 32
 __device__ int D_ROW_LEFT = ROW_LEFT;
 __device__ int D_COL_RIGHT = COL_RIGHT;
@@ -315,4 +315,51 @@ void sumReductionNoBranchModify(float *input, float* output, int len){
     if (tId==0){
         output[blockIdx.x] = partialSum[0];
     }   
+}
+
+/*
+    Chapter 5 Problem 10 
+    This kernel aims to increase the thread' granularity by processing 2
+    adjacent elements at a time
+*/
+
+__global__
+void matrixMultTiledIncreasedGranularity(float *matrixLeft, float *matrixRight, float *output){
+    __shared__  float sMatrixLeft[TILE_WIDTH][TILE_WIDTH];
+    __shared__  float sMatrixRight4FirstElement[TILE_WIDTH][TILE_WIDTH];  
+    __shared__  float sMatrixRight4SecondElement[TILE_WIDTH][TILE_WIDTH];
+    int bx = blockIdx.x * 2; int by = blockIdx.y;
+    int tx = threadIdx.x; int ty = threadIdx.y;
+    int col = bx * blockDim.x + tx;
+    int row = by * blockDim.y + ty;
+    float value4FirstElement = 0.0;
+    float value4SecondElement = 0.0;
+    for (int i = 0; i < ceil(D_K/ (float)(TILE_WIDTH)); i++){
+        sMatrixLeft[ty][tx] = 0.0;
+        sMatrixRight4FirstElement[ty][tx] = 0.0;
+        sMatrixRight4SecondElement[ty][tx] = 0.0;
+        __syncthreads(); 
+        if (row < D_ROW_LEFT && i * TILE_WIDTH + tx < D_K){
+            sMatrixLeft[ty][tx]  = matrixLeft[row * D_K + i * TILE_WIDTH + tx];
+        }
+        if ((ty + i * TILE_WIDTH) < D_K && col < D_COL_RIGHT){
+        sMatrixRight4FirstElement[ty][tx] = matrixRight[(ty + i * TILE_WIDTH) * D_COL_RIGHT  + col];
+        }
+        if ((ty + i * TILE_WIDTH) < D_K && col + 1 < D_COL_RIGHT){
+        sMatrixRight4SecondElement[ty][tx] = matrixRight[(ty + i * TILE_WIDTH) * D_COL_RIGHT  + col + TILE_WIDTH];
+        }
+        __syncthreads();
+        for (int j = 0; j < TILE_WIDTH; j++){
+           value4FirstElement += sMatrixLeft[ty][j] * sMatrixRight4FirstElement[j][tx]; 
+           value4SecondElement += sMatrixLeft[ty][j] * sMatrixRight4SecondElement[j][tx];
+        }
+        __syncthreads();  
+    }
+   //output[0] = 0; 
+    if (row < D_ROW_LEFT && col < D_COL_RIGHT ){
+        output[row * D_COL_RIGHT + col] = value4FirstElement;
+    }   
+    if (row < D_ROW_LEFT && col + TILE_WIDTH < D_COL_RIGHT ){
+        output[row * D_COL_RIGHT + col + TILE_WIDTH] = value4SecondElement;
+    }  
 }
