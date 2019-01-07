@@ -20,11 +20,9 @@ of representable numbers of the number line.
      
      <div align="center"><img src="2BitsM.PNG" width="75%" height="75%"></div>
      
-     The above figure shows how I calculate all representable numbers by using given format. The
-    exponent value, E = b111 is reserved. There are 28 numbers in total evenly distribuing in 7 
-    intervals: [0.125, 0.21875], [0.25, 0.4375], [0.5, 0.875], [1, 1.75], [2, 3.5], [4, 7], [8, 14].
-
-  The figure below is the vlsualization of those numbers in 1-D plot. The exponent bit determines the range of representable numbers. Compared with the format in problem 1, the given format can represent numbers in a 4 times bigger range.
+     The above figure shows how I calculate all representable numbers by using given format. The exponent value, E = b111 is reserved. There are 28 numbers in total evenly distribuing in 7 intervals: [0.125, 0.21875], [0.25, 0.4375], [0.5, 0.875], [1, 1.75], [2, 3.5], [4, 7], [8, 14]. 
+    
+     The figure below is the vlsualization of those numbers in 1-D plot. The exponent bit determines the range of representable numbers. Compared with the format in problem 1, the given format can represent numbers in a 4 times bigger range.
     
    <div align="center"><img src="2BitsMPlot.PNG" width="75%" height="75%"></div>
       
