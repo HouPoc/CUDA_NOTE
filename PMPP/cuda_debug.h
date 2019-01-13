@@ -96,7 +96,7 @@ bool checkMatrixMatrixMult(T* matrixLeft, T* matrixRight, T* result,
     Check sumReduction
 */
 template <class T>
-bool checkSumReduction(float *input, float *inputCUDA, int len, int lenCUDA)
+bool checkSumReduction(T *input, T *inputCUDA, int len, int lenCUDA)
 {
     float sum = 0.0;
     float sumCUDA = 0.0;
@@ -116,5 +116,54 @@ bool checkSumReduction(float *input, float *inputCUDA, int len, int lenCUDA)
 }
 
 
+template <class T>
+bool check1Dconvolution(T *input, T *mask, T *outputCUDA, int len, int lenMask){
+    for (int i = 0; int i < len; i++){
+        float value = 0;
+        for (int j = -(lenMask / 2); int j < lenMask / 2; j++){
+            if (i + j >= 0){
+                value += input[i + j] * mask[lenMask / 2 + j]; 
+            }
+            else{
+                value += 0.0;   
+            }
+        }
+        if (abs(value - outputCUDA[i]) > 1.0){
+            printf("Convolution result incorrect at %d .\n", i);
+            std :: cout << "\t CUDA result :" << outputCUDA[i];
+            std :: cout << "\t \t calculate result: " << value;
+            std :: cout << "\t difference : " << outputCUDA[i] - value;
+            std :: cout << endl;
+            return false;
+        }
+    }
+    printf("1D convolution correct. \n");
+    return true;
+}
 
+template <class T>
+bool check2Dconvolution(float *input, float *outputCUDA, float inputRow, float inputCol, float maskRow, float maskCol){
+    for (int i = 0; i < inputRow; i++){
+        for (int j = 0; j < inputCol; j++){
+            float value = 0.0;
+            for (int m = -(maskRow/2); m < maskRow/2; m++ ){
+                for (int n = -(maskCol/2); n < maskCol/2; n++){
+                    if (i + m >= 0 && i + m < inputRow && j + n >=0 && j + n <inputCol){
+                        value +=input[(i + m) * inputRow + (j + n)] * mask[(i + maskRow/2) * maskCol + (j + maskCol/2)];
+                    }
+                }
+            }
+            if (abs(value - outputCUDA[i * inputCol +j] > 1.0)){
+                printf("Convolution result incorrect at %d %d.\n", i, j);
+                std :: cout << "\t CUDA result :" << outputCUDA[i * inputCol + j];
+                std :: cout << "\t \t calculate result: " << value;
+                std :: cout << "\t difference : " << outputCUDA[i * inputCol + j] - value;
+                std :: cout << endl;
+                return false;   
+            }
+        }
+    }
+    printf("1D convolution correct. \n");
+    return true;
+}
 

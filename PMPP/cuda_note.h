@@ -363,3 +363,21 @@ void matrixMultTiledIncreasedGranularity(float *matrixLeft, float *matrixRight, 
         output[row * D_COL_RIGHT + col + TILE_WIDTH] = value4SecondElement;
     }  
 }
+
+/*
+    In this kernel, we will performe basic 1D convolution with CUDA
+*/
+__global__ 
+voidconvolution1D(float *input, float *output, int len, int maskWidth){
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < len){
+        float value = 0.0;
+        int convolutionStartIndex = index - maskWidth/2
+        for (int i = 0; i < maskWidth, i++){
+            if (convolutionStartIndex + i >= 0 && convolutionStartIndex + 1 < len) {
+                value += input[convolutionStartIndex + i] * d_mask[i]
+            }
+        }
+        output[index] = value;
+    }
+}
