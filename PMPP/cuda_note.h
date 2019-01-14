@@ -9,9 +9,12 @@
 #define COL_RIGHT 2000
 #define K 1000
 #define TILE_WIDTH 32
+#define MASK_WIDTH 7  // define the size of the mask
+
 __device__ int D_ROW_LEFT = ROW_LEFT;
 __device__ int D_COL_RIGHT = COL_RIGHT;
 __device__ int D_K = K;
+__constant__ float d_mask[MASK_WIDTH]; // allocate GPU constant memory  
 
 
 using namespace std;
@@ -368,14 +371,15 @@ void matrixMultTiledIncreasedGranularity(float *matrixLeft, float *matrixRight, 
     In this kernel, we will performe basic 1D convolution with CUDA
 */
 __global__ 
-voidconvolution1D(float *input, float *output, int len, int maskWidth){
+void convolution1D(float *input, float *output, int len, int maskWidth){
     int index = blockIdx.x * blockDim.x + threadIdx.x;
+    float value = 0.0;
+    int convolutionStartIndex = index - maskWidth/2;
     if (index < len){
-        float value = 0.0;
-        int convolutionStartIndex = index - maskWidth/2
-        for (int i = 0; i < maskWidth, i++){
+       
+        for (int i = 0; i < maskWidth; i++){
             if (convolutionStartIndex + i >= 0 && convolutionStartIndex + 1 < len) {
-                value += input[convolutionStartIndex + i] * d_mask[i]
+                value += input[convolutionStartIndex + i] * d_mask[i];
             }
         }
         output[index] = value;

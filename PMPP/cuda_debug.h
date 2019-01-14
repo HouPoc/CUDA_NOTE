@@ -31,7 +31,7 @@ bool checkAdditionResult (T* first, T* second, T* result, int row, int col)
                 printf("matrix addition not correct at index %d:\n", index);
                 std :: cout << "\tgiven result :" << result[index];
                 std :: cout << "\t \t calculate result: " << first[index] + second[index];
-                std :: cout << endl;
+                std :: cout << std:: endl;
                 return false;
             }
             index++;
@@ -52,7 +52,7 @@ bool checkMatrixVectorMult(T* matrix, T* vector, T* result, int row, int col){
             printf("matrix vector mult not correct at index %d:\n", i);
                 std :: cout << "\tgiven result :" << result[i];
                 std :: cout << "\t \t calculate result: " << tmp;
-                std :: cout << endl;
+                std :: cout << std:: endl;
                 return false;
         }
     }
@@ -83,7 +83,7 @@ bool checkMatrixMatrixMult(T* matrixLeft, T* matrixRight, T* result,
                 std :: cout << "\tgiven result :" << result[i * colRight + j];
                 std :: cout << "\t \t calculate result: " << value;
                 std :: cout << "\t difference : " << result[i * colRight + j] - value;
-                std :: cout << endl;
+                std :: cout << std:: endl;
                 return false;   
             }
         }
@@ -118,9 +118,9 @@ bool checkSumReduction(T *input, T *inputCUDA, int len, int lenCUDA)
 
 template <class T>
 bool check1Dconvolution(T *input, T *mask, T *outputCUDA, int len, int lenMask){
-    for (int i = 0; int i < len; i++){
+    for (int i = 0; i < len; i++){
         float value = 0;
-        for (int j = -(lenMask / 2); int j < lenMask / 2; j++){
+        for (int j = -(lenMask / 2); j < lenMask / 2; j++){
             if (i + j >= 0){
                 value += input[i + j] * mask[lenMask / 2 + j]; 
             }
@@ -133,7 +133,7 @@ bool check1Dconvolution(T *input, T *mask, T *outputCUDA, int len, int lenMask){
             std :: cout << "\t CUDA result :" << outputCUDA[i];
             std :: cout << "\t \t calculate result: " << value;
             std :: cout << "\t difference : " << outputCUDA[i] - value;
-            std :: cout << endl;
+            std :: cout << std:: endl;
             return false;
         }
     }
@@ -142,7 +142,7 @@ bool check1Dconvolution(T *input, T *mask, T *outputCUDA, int len, int lenMask){
 }
 
 template <class T>
-bool check2Dconvolution(float *input, float *outputCUDA, float inputRow, float inputCol, float maskRow, float maskCol){
+bool check2Dconvolution(T *input, T *mask, T* outputCUDA ,int inputRow, int inputCol, int maskRow, int maskCol){
     for (int i = 0; i < inputRow; i++){
         for (int j = 0; j < inputCol; j++){
             float value = 0.0;
@@ -153,12 +153,12 @@ bool check2Dconvolution(float *input, float *outputCUDA, float inputRow, float i
                     }
                 }
             }
-            if (abs(value - outputCUDA[i * inputCol +j] > 1.0)){
+            if (abs(value - outputCUDA[i * inputCol +j]) > 1.0){
                 printf("Convolution result incorrect at %d %d.\n", i, j);
                 std :: cout << "\t CUDA result :" << outputCUDA[i * inputCol + j];
                 std :: cout << "\t \t calculate result: " << value;
                 std :: cout << "\t difference : " << outputCUDA[i * inputCol + j] - value;
-                std :: cout << endl;
+                std :: cout << std:: endl;
                 return false;   
             }
         }
