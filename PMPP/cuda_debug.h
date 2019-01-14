@@ -119,17 +119,18 @@ bool checkSumReduction(T *input, T *inputCUDA, int len, int lenCUDA)
 template <class T>
 bool check1Dconvolution(T *input, T *mask, T *outputCUDA, int len, int lenMask){
     for (int i = 0; i < len; i++){
-        float value = 0;
-        for (int j = -(lenMask / 2); j < lenMask / 2; j++){
-            if (i + j >= 0){
-                value += input[i + j] * mask[lenMask / 2 + j]; 
+        float value = 0.0;
+        int startIndex = i - (lenMask / 2);
+        for (int j = 0; j < lenMask; j++){
+            if (startIndex + j >= 0 && startIndex + j < len){
+                value += input[startIndex + j] * mask[j]; 
             }
             else{
                 value += 0.0;   
             }
         }
         if (abs(value - outputCUDA[i]) > 1.0){
-            printf("Convolution result incorrect at %d .\n", i);
+            printf("Convolution result incorrect at %d.\n", i);
             std :: cout << "\t CUDA result :" << outputCUDA[i];
             std :: cout << "\t \t calculate result: " << value;
             std :: cout << "\t difference : " << outputCUDA[i] - value;

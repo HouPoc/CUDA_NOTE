@@ -378,7 +378,7 @@ void convolution1D(float *input, float *output, int len, int maskWidth){
     if (index < len){
        
         for (int i = 0; i < maskWidth; i++){
-            if (convolutionStartIndex + i >= 0 && convolutionStartIndex + 1 < len) {
+            if (convolutionStartIndex + i >= 0 && convolutionStartIndex + i < len) {
                 value += input[convolutionStartIndex + i] * d_mask[i];
             }
         }

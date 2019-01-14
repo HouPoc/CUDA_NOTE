@@ -3,7 +3,7 @@
 #include "../cuda_note.h"
 
 
-#define LEN 2000    // define the size of input/output data
+#define LEN 2000000    // define the size of input/output data
 #define BLOCK_DIM 256
 
 
@@ -13,8 +13,9 @@ int main(){
     float *mask =   (float *) malloc(maskSize);
     float *h_input =  (float *) malloc(dataSize);
     float *h_output = (float *) malloc(dataSize);
-    initial2DMatrix<float>(h_input,1, LEN, 0);
+    initial2DMatrix<float>(h_input,1, LEN, 1);
     initial2DMatrix<float>(mask, 1, MASK_WIDTH, 0);
+    //peakMatrix(mask, 1, MASK_WIDTH);
     float *d_input, *d_output;
    
     cudaEvent_t start, stop;
@@ -30,6 +31,7 @@ int main(){
     dim3 grid(ceil(LEN/(float)BLOCK_DIM));
     cudaEventRecord(start);
     convolution1D<<<grid, block>>>(d_input, d_output, LEN, MASK_WIDTH);
+    cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaMemcpy(h_output, d_output, dataSize, cudaMemcpyDeviceToHost);
     float ms = 0;
