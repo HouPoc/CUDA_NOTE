@@ -3,6 +3,8 @@
         "system_error": "cpp",
         "type_traits": "cpp",
         "xstddef": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "utility": "cpp",
+        "cmath": "cpp"
     }
 }

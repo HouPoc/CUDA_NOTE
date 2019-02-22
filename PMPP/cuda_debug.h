@@ -1,3 +1,4 @@
+#include<iostream>
 #include<string>
 #include<stdio.h>
 #include<stdlib.h>
@@ -144,18 +145,19 @@ bool check1Dconvolution(T *input, T *mask, T *outputCUDA, int len, int lenMask){
 
 template <class T>
 bool check2Dconvolution(T *input, T *mask, T* outputCUDA ,int inputRow, int inputCol, int maskRow, int maskCol){
+   
     for (int i = 0; i < inputRow; i++){
         for (int j = 0; j < inputCol; j++){
             float value = 0.0;
-            for (int m = -(maskRow/2); m < maskRow/2; m++ ){
-                for (int n = -(maskCol/2); n < maskCol/2; n++){
+            for (int m = -(maskRow/2); m <= maskRow/2; m++ ){
+                for (int n = -(maskCol/2); n <= maskCol/2; n++){
                     if (i + m >= 0 && i + m < inputRow && j + n >=0 && j + n <inputCol){
-                        value +=input[(i + m) * inputRow + (j + n)] * mask[(i + maskRow/2) * maskCol + (j + maskCol/2)];
+                        value +=input[(i + m) * inputCol + (j + n)] * mask[(m + maskRow/2) * maskCol + (n + maskCol/2)];
                     }
                 }
             }
-            if (abs(value - outputCUDA[i * inputCol +j]) > 1.0){
-                printf("Convolution result incorrect at %d %d.\n", i, j);
+            if (abs(value - outputCUDA[i * inputCol + j]) > 1.0){
+                printf("Convolution result incorrect at [%d %d]:\n", i, j);
                 std :: cout << "\t CUDA result :" << outputCUDA[i * inputCol + j];
                 std :: cout << "\t \t calculate result: " << value;
                 std :: cout << "\t difference : " << outputCUDA[i * inputCol + j] - value;
@@ -164,7 +166,7 @@ bool check2Dconvolution(T *input, T *mask, T* outputCUDA ,int inputRow, int inpu
             }
         }
     }
-    printf("1D convolution correct. \n");
+    printf("2D convolution correct. \n");
     return true;
 }
 

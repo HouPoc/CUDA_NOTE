@@ -9,13 +9,14 @@
 #define COL_RIGHT 2000
 #define K 1000
 #define TILE_WIDTH 32
-#define MASK_WIDTH 7  // define the size of the mask
-
+#define MASK_WIDTH 5  // define the size of the mask
+#define I_TILE_SIZE 32
+#define O_TILE_SIZE (I_TILE_SIZE + 1 - MASK_WIDTH)
 __device__ int D_ROW_LEFT = ROW_LEFT;
 __device__ int D_COL_RIGHT = COL_RIGHT;
 __device__ int D_K = K;
 __constant__ float d_mask[MASK_WIDTH]; // allocate GPU constant memory  
-
+__constant__ float d_mask2D[MASK_WIDTH][MASK_WIDTH];
 
 using namespace std;
 
@@ -216,9 +217,9 @@ void sumReduction(float *input, float *output, int len){
     }
     for (int stride = 1; stride < blockDim.x; stride*=2){
         __syncthreads();
-        int index = 2 * stride * threadIdx.x;
-        if (index < blockDim.x){
-            partialSum[index] += partialSum[index + stride];
+       
+        if (t%(2*stride) == 0){
+            partialSum[t] += partialSum[t + stride];
         }
     }
     __syncthreads();
@@ -284,9 +285,9 @@ void sumReductionModify(float *input, float *output, int len){
     __syncthreads();
     for (int stride = 1; stride < blockDim.x; stride*=2){
         __syncthreads();
-        int index = 2 * stride * threadIdx.x;
-        if (index < blockDim.x){
-            partialSum[index] += partialSum[index + stride];
+          
+        if (tId%(2*stride) == 0){
+            partialSum[tId] += partialSum[tId + stride];
         }
     }
     __syncthreads();
@@ -383,5 +384,42 @@ void convolution1D(float *input, float *output, int len, int maskWidth){
             }
         }
         output[index] = value;
+    }
+}
+
+/*
+    In this kernel, we will implement 2D convolution with CUDA
+    grid = (col / output_tile_col, row / output_tile_row) 
+    block = (output_tile_col + mask_width / 2, output_tile_col + mask / 2)
+    shared memory = block
+
+*/ 
+
+__global__
+void convolution2D(float *input, float *output, int row, int col, int patch, int maskWidth){
+    __shared__ float inputTile[O_TILE_SIZE + MASK_WIDTH - 1][O_TILE_SIZE + MASK_WIDTH - 1];
+    int tx = threadIdx.x; int ty = threadIdx.y;
+    int outputCol = blockIdx.x * O_TILE_SIZE + tx;
+    int outputRow = blockIdx.y * O_TILE_SIZE + ty;
+    int inputCol = outputCol - MASK_WIDTH / 2;
+    int inputRow = outputRow - MASK_WIDTH / 2;
+
+    if (inputCol >=0 && inputCol < col && inputRow >= 0 && inputRow < row){
+        inputTile[ty][tx] = input[inputRow * col + inputCol];
+    }
+    else {
+        inputTile[ty][tx] = 0.0;
+    }
+    __syncthreads();
+    float value = 0.0;
+    if (ty < O_TILE_SIZE && tx < O_TILE_SIZE){
+        for (int i = 0; i < MASK_WIDTH; i++){
+            for (int j = 0 ; j < MASK_WIDTH; j++){
+               value += inputTile[i + ty][j + tx] * d_mask2D[i][j];
+            }
+        }
+        if (outputCol < col && outputRow < row){
+            output[outputRow * col + outputCol] = value;
+        }
     }
 }
